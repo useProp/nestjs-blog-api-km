@@ -3,7 +3,8 @@ import {
   InternalServerErrorException,
   NotFoundException,
   HttpException,
-  UnauthorizedException, ConflictException,
+  UnauthorizedException,
+  ConflictException,
 } from '@nestjs/common';
 import { RegistrationData } from '../dto/RegistrationData.dto';
 import { LoginData } from '../dto/LoginData.dto';
@@ -11,19 +12,28 @@ import { UserEntity } from '../entities/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectRepository(UserEntity)
     private readonly userRepo: Repository<UserEntity>,
+    private readonly jwtService: JwtService,
   ) {}
 
   async registration(data: RegistrationData) {
     try {
       const user = this.userRepo.create(data);
       await user.save();
-      return user;
+      const token = this.jwtService.sign({ username: data.username });
+      delete user.password;
+      return {
+        user: {
+          ...user,
+          token,
+        },
+      };
     } catch (e) {
       if (e.code === '23505') {
         throw new ConflictException('Username or Email already taken');
@@ -47,7 +57,14 @@ export class AuthService {
         throw new UnauthorizedException('Password is incorrect');
       }
 
-      return user;
+      delete user.password;
+      const token = this.jwtService.sign({ username: user.username });
+      return {
+        user: {
+          ...user,
+          token,
+        },
+      };
     } catch ({ status, message }) {
       throw new HttpException(message, status);
     }
