@@ -1,5 +1,6 @@
 import {
   HttpException,
+  HttpStatus,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -34,6 +35,36 @@ export class UserService {
       await this.userRepo.update({ username }, data);
       const user = await this.userRepo.findOne({ where: { username } });
       return user;
+    } catch (e) {
+      throw new InternalServerErrorException();
+    }
+  }
+
+  async followUser(currentUser: UserEntity, username: string) {
+    try {
+      const user = await this.userRepo.findOne({
+        where: { username },
+        relations: ['followers'],
+      });
+      user.followers.push(currentUser);
+      await user.save();
+      return user.isFollowedTo(currentUser);
+    } catch ({ message, status }) {
+      throw new InternalServerErrorException(message, status);
+    }
+  }
+
+  async unfollowUser(currentUser: UserEntity, username: string) {
+    try {
+      const user = await this.userRepo.findOne({
+        where: { username },
+        relations: ['followers'],
+      });
+      user.followers = user.followers.filter(
+        (follower) => follower !== currentUser,
+      );
+      await user.save();
+      return user.isFollowedTo(currentUser);
     } catch (e) {
       throw new InternalServerErrorException();
     }
