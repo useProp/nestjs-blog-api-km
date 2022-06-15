@@ -1,27 +1,55 @@
-import {Injectable, InternalServerErrorException} from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+  HttpException,
+  UnauthorizedException, ConflictException,
+} from '@nestjs/common';
 import { RegistrationData } from '../dto/RegistrationData.dto';
-import { LoginData } from '../LoginData.dto';
+import { LoginData } from '../dto/LoginData.dto';
+import { UserEntity } from '../entities/user.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import * as bcrypt from 'bcryptjs';
 
 @Injectable()
 export class AuthService {
-  private user = {
-    email: 'test@test.com',
-    username: 'First User',
-    password: '123456',
-    token: 'jwt.token',
-    bio: 'Something about Me will be here :)',
-    image: null,
-  };
+  constructor(
+    @InjectRepository(UserEntity)
+    private readonly userRepo: Repository<UserEntity>,
+  ) {}
 
-  registration(data: RegistrationData) {
-    return this.user;
+  async registration(data: RegistrationData) {
+    try {
+      const user = this.userRepo.create(data);
+      await user.save();
+      return user;
+    } catch (e) {
+      if (e.code === '23505') {
+        throw new ConflictException('Username or Email already taken');
+      }
+      throw new InternalServerErrorException('Something went wrong :(');
+    }
   }
 
-  login(data: LoginData) {
-    if (data.email !== this.user.email) {
-      throw new InternalServerErrorException();
-    }
+  async login({ email, password }: LoginData) {
+    try {
+      const user = await this.userRepo.findOne({
+        where: { email },
+      });
 
-    return this.user;
+      if (!user) {
+        throw new NotFoundException('User is not found');
+      }
+
+      const isPasswordCorrect = await bcrypt.compare(password, user.password);
+      if (!isPasswordCorrect) {
+        throw new UnauthorizedException('Password is incorrect');
+      }
+
+      return user;
+    } catch ({ status, message }) {
+      throw new HttpException(message, status);
+    }
   }
 }
