@@ -1,19 +1,19 @@
 import { Entity, Column, BeforeInsert } from 'typeorm';
 import { IsEmail } from 'class-validator';
-import { classToPlain, Exclude } from 'class-transformer';
+import {classToPlain, Exclude, instanceToPlain} from 'class-transformer';
 import { Base } from './base.entity';
 import * as bcrypt from 'bcryptjs';
 
 @Entity('users')
 export class UserEntity extends Base {
-  @Column({ unique: true, })
+  @Column({ unique: true })
   username: string;
 
   @Column()
   @Exclude()
   password: string;
 
-  @Column({ unique: true, })
+  @Column({ unique: true })
   @IsEmail()
   email: string;
 
@@ -26,9 +26,5 @@ export class UserEntity extends Base {
   @BeforeInsert()
   async hashPassword() {
     this.password = await bcrypt.hash(this.password, 10);
-  }
-
-  toJson() {
-    return classToPlain(this);
   }
 }

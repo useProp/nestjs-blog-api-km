@@ -27,7 +27,7 @@ export class AuthService {
       const user = this.userRepo.create(data);
       await user.save();
       const token = this.jwtService.sign({ username: data.username });
-      delete user.password;
+
       return {
         user: {
           ...user,
@@ -57,7 +57,8 @@ export class AuthService {
         throw new UnauthorizedException('Password is incorrect');
       }
 
-      delete user.password;
+      user.toJSON();
+
       const token = this.jwtService.sign({ username: user.username });
       return {
         user: {

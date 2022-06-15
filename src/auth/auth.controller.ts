@@ -19,7 +19,6 @@ export class AuthController {
     return this.authService.registration(registrationData);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Post('/login')
   login(@Body(ValidationPipe) loginData: LoginData) {
     return this.authService.login(loginData);
