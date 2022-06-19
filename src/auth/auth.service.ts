@@ -70,4 +70,8 @@ export class AuthService {
       throw new HttpException(message, status);
     }
   }
+
+  generateToken(username: string): string {
+    return this.jwtService.sign({ username });
+  }
 }

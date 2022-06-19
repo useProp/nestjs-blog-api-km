@@ -3,6 +3,7 @@ import { IsEmail } from 'class-validator';
 import { Exclude } from 'class-transformer';
 import { Base } from './base.entity';
 import * as bcrypt from 'bcryptjs';
+import { Profile } from '../interfaces/profile.interface';
 
 @Entity('users')
 export class UserEntity extends Base {
@@ -35,10 +36,25 @@ export class UserEntity extends Base {
     this.password = await bcrypt.hash(this.password, 10);
   }
 
-  isFollowedTo(user: UserEntity) {
-    const isFollowing = this.followers.includes(user);
-    const profile: any = this.toJSON();
-    delete profile.followers;
-    return { ...profile, following: isFollowing };
+  async followTo(user: UserEntity): Promise<Profile> {
+    user.followers.push(this);
+    await user.save();
+    return this.getProfile(user);
+  }
+
+  async unfollowFrom(user: UserEntity): Promise<Profile> {
+    user.followers = user.followers.filter((follower) => follower !== this);
+    await user.save();
+    return this.getProfile(user);
+  }
+
+  getProfile(user: UserEntity): Profile {
+    const { username, image, bio } = user.toJSON();
+    const following = this.isFollowedTo(user);
+    return { username, image, bio, following };
+  }
+
+  isFollowedTo(user: UserEntity | null): boolean {
+    return user ? user.followers.includes(this) : false;
   }
 }

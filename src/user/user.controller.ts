@@ -19,15 +19,29 @@ export class UserController {
   @UseGuards(JwtAuthGuard)
   @Get()
   async findByUsername(@GetUser() { username }: UserEntity) {
-    return this.userService.findByUsername(username);
+    const { user, token } = await this.userService.findByUsername(username);
+    return {
+      user: {
+        ...user,
+        token,
+      },
+    };
   }
 
   @UseGuards(JwtAuthGuard)
   @Put()
   async updateUser(
     @GetUser() { username }: UserEntity,
-    @Body(new ValidationPipe({ transform: true, whitelist: true, })) data: UpdateUser,
+    @Body(new ValidationPipe({ transform: true, whitelist: true }))
+    data: UpdateUser,
   ) {
-    return this.userService.updateUser(username, data);
+    const { user, token } = await this.userService.updateUser(username, data);
+
+    return {
+      user: {
+        ...user,
+        token,
+      },
+    };
   }
 }
