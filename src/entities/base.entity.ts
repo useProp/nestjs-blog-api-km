@@ -11,10 +11,10 @@ export abstract class Base extends BaseEntity {
   id: number;
 
   @CreateDateColumn()
-  created: Date;
+  createdAt: Date;
 
   @UpdateDateColumn()
-  updated: Date;
+  updatedAt: Date;
 
   toJSON() {
     return instanceToPlain(this);
