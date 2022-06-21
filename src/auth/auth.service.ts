@@ -6,8 +6,8 @@ import {
   UnauthorizedException,
   ConflictException,
 } from '@nestjs/common';
-import { RegistrationData } from '../dto/RegistrationData.dto';
-import { LoginData } from '../dto/LoginData.dto';
+import { RegistrationData } from '../dto/uegistrationData.dto';
+import { LoginData } from '../dto/loginData.dto';
 import { UserEntity } from '../entities/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
