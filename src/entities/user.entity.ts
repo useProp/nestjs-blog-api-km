@@ -43,7 +43,7 @@ export class UserEntity extends Base {
   @OneToMany((type) => ArticleEntity, (article) => article.author)
   articles: ArticleEntity[];
 
-  @JoinColumn()
+  @JoinTable()
   @ManyToMany((type) => ArticleEntity, (article) => article.favoritedBy)
   favorites: ArticleEntity[];
 
